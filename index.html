@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transliteration with Suggestions</title>
+    <style>
+        #suggestions {
+            position: absolute;
+            border: 1px solid #ccc;
+            background: white;
+            max-width: 200px;
+            display: none;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            z-index: 10;
+        }
+        #suggestions li {
+            padding: 5px;
+            cursor: pointer;
+        }
+        #suggestions li:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    
+    <h2>English to Hindi Transliteration</h2>
+    <textarea id="textInput" placeholder="Type in English and press Space..."></textarea>
+    <ul id="suggestions"></ul>
+
+    <script>
+        const apiUrl = "http://127.0.0.1:8000/transliterate/";
+        const textInput = document.getElementById("textInput");
+        const suggestionsBox = document.getElementById("suggestions");
+
+        textInput.addEventListener("keydown", async function (event) {
+            if (event.key === " ") {
+                event.preventDefault(); // Prevent default space action
+
+                let words = textInput.value.split(" ");
+                let lastWord = words[words.length - 1].trim(); // Get last word
+
+                if (lastWord) {
+                    try {
+                        let response = await fetch(apiUrl + "?word=" + encodeURIComponent(lastWord));
+                        let data = await response.json();
+                        
+                        // Automatically replace last word
+                        words[words.length - 1] = data.transliterated;
+                        textInput.value = words.join(" ") + " ";
+
+                        // Show suggestions
+                        console.log(data.suggestions)
+                        showSuggestions(data.suggestions, words.length - 1);
+                    } catch (error) {
+                        console.error("Error fetching transliteration:", error);
+                    }
+                }
+            }
+        });
+
+        function showSuggestions(suggestions, wordIndex) {
+            suggestionsBox.innerHTML = "";
+            suggestionsBox.style.display = "block";
+
+            suggestions.forEach(suggestion => {
+                let li = document.createElement("li");
+                li.textContent = suggestion.word;
+                li.onclick = function () {
+                    let words = textInput.value.split(" ");
+                    words[wordIndex] = suggestion.word; // Replace word with selected suggestion
+                    textInput.value = words.join(" ") + " ";
+                    suggestionsBox.style.display = "none"; // Hide suggestions
+                };
+                suggestionsBox.appendChild(li);
+            });
+        }
+
+        document.addEventListener("click", function (event) {
+            if (!suggestionsBox.contains(event.target)) {
+                suggestionsBox.style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>
