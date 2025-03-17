@@ -10,11 +10,7 @@ app = FastAPI(
     version="1.0.0",
     contact={
         "name": "Hemant Gharat",
-    },
-    license_info={
-        "name": "MIT",
-        "url": "https://opensource.org/licenses/MIT",
-    },
+    }
 )
 
 app.add_middleware(
